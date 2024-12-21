@@ -34,26 +34,29 @@ class AuthController extends Controller
 
     /**
      * Handle login of an existing user.
-     */
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+     */public function login(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string',
+    ]);
 
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            return response()->json(['message' => 'Login successful']);
-        }
-        if (is_null($request->email_verified_at)) {
-            Auth::logout();
-            return response()->json(['message' => 'Email not verified. Please check your inbox.'], 403);
-        }
-
-        throw ValidationException::withMessages([
-            'email' => ['These credentials do not match our records.'],
-        ]);
+    // Attempt to authenticate the user
+    if (!Auth::attempt($request->only('email', 'password'))) {
+        return response()->json(['message' => 'Invalid login credentials.'], 401);
     }
+
+    // Check the authenticated user's email_verified_at
+    $user = Auth::user(); // Get the currently authenticated user
+
+    if (is_null($user->email_verified_at)) {
+        Auth::logout();
+        return response()->json(['message' => 'Email not verified. Please check your inbox.'], 403);
+    }
+
+    // Return success response
+    return response()->json(['message' => 'Login successful!']);
+}
 
     /**
      * Handle logout.
