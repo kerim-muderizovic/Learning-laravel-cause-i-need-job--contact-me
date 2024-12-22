@@ -38,3 +38,4 @@ Route::get('/login', function () {
     return response()->json(['message' => 'Seems like you logged in']);
 })->name('login');
 Route::put('/user/{id}/update-image',[UserController::class , 'updatePhoto']);
+Route::put('/user/{id}/update-name', [UserController::class, 'updateName']);
