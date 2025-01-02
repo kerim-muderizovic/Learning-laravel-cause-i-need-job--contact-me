@@ -47,15 +47,18 @@ Route::get('/auth/check', function () {
         Route::put('{id}/update-image', [UserController::class, 'updatePhoto']);
         Route::put('{id}/update-name', [UserController::class, 'updateName']);
         Route::get('{userId}/tasks', [TaskController::class, 'getUserTasks']);
+        Route::post('/update-password', [UserController::class, 'updatePassword']);
+        Route::get('/getAll', [UserController::class, 'getAllUsers']);
     });
 
     // Task Routes
         Route::get('/getAllTasks', [TaskController::class, 'getAllTasks']); // Fetch all tasks
+        Route::get('/getUserTasks', [TaskController::class, 'getUserTasks']); // Fetch all tasks
         Route::post('/postTask', [TaskController::class, 'store']); // Create a task
         Route::get('/assignable-users', [TaskController::class, 'getAssignableUsers']); // Fetch assignable users
         Route::delete('DeleteTask/{taskId}', [TaskController::class, 'destroy']); // Delete a task
-
 // Fallback for Unauthenticated Access
 Route::get('/login', function () {
     return response()->json(['message' => 'You must be logged in to access this route.'], 401);
 })->name('login');
+Route::put('/tasks/{taskId}', [TaskController::class, 'updateProgress']);
