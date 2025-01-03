@@ -54,9 +54,17 @@ class AuthController extends Controller
         return response()->json(['message' => 'Email not verified. Please check your inbox.'], 403);
     }
 
-    // Return success response
-    return response()->json(['message' => 'Login successful!']);
+    // Return success response with user role
+    return response()->json([
+        'message' => 'Login successful!',
+        'user' => [
+            'id' => $user->id,
+            'email' => $user->email,
+            'role' => $user->role,  // Assuming `role` is a column in the users table
+        ]
+    ]);
 }
+
 
     /**
      * Handle logout.

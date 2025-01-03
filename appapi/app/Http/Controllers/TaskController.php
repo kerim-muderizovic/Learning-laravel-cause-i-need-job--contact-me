@@ -97,24 +97,14 @@ public function getUserTasks()
         return response()->json($users);
     }
     public function getAllTasks()
-     {
-    try {
-        // Get the authenticated user
-       
-        // Fetch tasks associated with the authenticated user via the many-to-many relationship
-        $tasks =Task::all(); // Include users in the tasks
-
+    {
+        $tasks = Task::with('assignedUsers')->get();
         return response()->json([
             'success' => true,
             'tasks' => $tasks,
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Could not fetch tasks.',
-        ], 500);
+        ]);
     }
-        }
+        
 
         public function destroy($id)
 {
