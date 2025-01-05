@@ -6,7 +6,10 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\AdminController;
+use App\Http\Middleware\IsAdmin;
+use App\Http\Controllers\MessageController;
+use Illuminate\Support\Facades\Broadcast;
 // Public Routes
 Route::get('/', function () {
     return ['Laravel' => app()->version()];
@@ -37,6 +40,7 @@ Route::get('/auth/check', function () {
         ]);
     }
 
+    // Log::info('Not Authenticated'); // Debugging
     return response()->json(['isLoggedIn' => false]);
 });
 
@@ -62,3 +66,26 @@ Route::get('/login', function () {
     return response()->json(['message' => 'You must be logged in to access this route.'], 401);
 })->name('login');
 Route::put('/tasks/{taskId}', [TaskController::class, 'updateProgress']);
+
+// Route::middleware([IsAdmin::class])->group(function () {
+    Route::delete('Admin/users/{id}', [AdminController::class, 'deleteUser']);
+    Route::delete('Admin/tasks/{id}', [AdminController::class, 'deleteTask']);
+    Route::put('Admin/tasks/{id}', [AdminController::class, 'editTask']);
+    Route::put('Admin/users/{id}', [AdminController::class, 'editUser']);
+    Route::post('/Admin/AddTask', [AdminController::class, 'createTask']);
+// });
+
+
+Route::get('/messages', [MessageController::class, 'index']);
+Route::post('/messages', [MessageController::class, 'store']);
+
+// Route::post('/broadcasting/auth', function () {
+//     // Custom logic (e.g., authentication of the user) can be added here
+//     // Laravel will handle the broadcasting auth automatically, but you can add additional checks if needed.
+
+//     return response()->json(['message' => 'Authenticated successfully']);
+// });
+
+Route::get('/api/messages', [MessageController::class, 'index']);
+    Route::post('api/messages', [MessageController::class, 'store']);
+    // Broadcast::routes(['middleware' => ['auth:sanctum']]); //if you use Laravel 
