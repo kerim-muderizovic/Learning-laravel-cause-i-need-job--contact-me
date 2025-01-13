@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use App\Mail\TwoFactorCodeMail;
+use Illuminate\Support\Facades\Mail;
+use Psr\Http\Message\ResponseInterface;
+
+use function Pest\Laravel\json;
 
 class AuthController extends Controller
 {
@@ -53,6 +58,7 @@ class AuthController extends Controller
         Auth::logout();
         return response()->json(['message' => 'Email not verified. Please check your inbox.'], 403);
     }
+    $this->send_twofactor_key();
 
     // Return success response with user role
     return response()->json([
@@ -61,6 +67,7 @@ class AuthController extends Controller
             'id' => $user->id,
             'email' => $user->email,
             'role' => $user->role,  // Assuming `role` is a column in the users table
+            'requires_2fa'=>$user->requires_2fa,
         ]
     ]);
 }
@@ -74,4 +81,41 @@ class AuthController extends Controller
         Auth::logout();
         return response()->json(['message' => 'Logout successful']);
     }
+
+    public function send_twofactor_key()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return 'not logged in at all';
+        }
+        $key=random_int(1000,9999);
+        $user->update([
+            'two_factor_key'=>$key,
+            'two_factor_expires_at'=> now()->addMinutes(10)
+        ]);
+        Mail::to($user->email)->send(new TwoFactorCodeMail($key));
+        return response()->json(['message' => '2FA code sent to your email']);
+    }
+
+    public function verify_twofactor(Request $request)
+    {
+        $user=auth::user();
+             $request->validate([
+                'two_factor_key'=>'required|numeric'
+             ]);
+             if($request->two_factor_key!==$user->two_factor_key)
+{ Auth::logout();
+    return response()->json(['message'=>'pogrean kod']);
+}
+
+            $user->update([
+                'two_factor_key'=>null,
+                'two_factor_expires_at'=>null
+            ]);
+            return response()->json(['message'=>'Yes','user'=>$user]);
+          
+
+    }
+
 }

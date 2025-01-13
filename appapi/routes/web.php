@@ -10,7 +10,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Broadcast;
+use App\Http\Middleware\ExcludeCsrfMiddleware;
 // Public Routes
+use App\Http\Controllers\BroadcastController;
 Route::get('/', function () {
     return ['Laravel' => app()->version()];
 });
@@ -25,7 +27,7 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     $request->fulfill();
     return redirect('/')->with('status', 'Email verified successfully!');
 })->middleware(['auth', 'signed'])->name('verification.verify');
-
+Route::post('/verify-2fa',[AuthController::class,'verify_twofactor']);
 // Auth Check Route
 Route::get('/auth/check', function () {
     if (Auth::check()) {
@@ -36,6 +38,7 @@ Route::get('/auth/check', function () {
                 'name' => $user->name,
                 'profilePicture' => $user->url ?? null,
                 'role' => $user->role ?? 'User',
+                'requires_2fa'=>$user->requires_2fa,
             ],
         ]);
     }
@@ -88,4 +91,4 @@ Route::post('/messages', [MessageController::class, 'store']);
 
 Route::get('/api/messages', [MessageController::class, 'index']);
     Route::post('api/messages', [MessageController::class, 'store']);
-    // Broadcast::routes(['middleware' => ['auth:sanctum']]); //if you use Laravel 
+    Route::post('/broadcasting1/auth', [BroadcastController::class, 'authenticate']);

@@ -17,20 +17,17 @@ class MessageSent
     /**
      * Create a new event instance.
      */
+    public $user;
     public $message;
 
-    public function __construct(Message $message)
+    public function __construct($user, $message)
     {
+        $this->user = $user;
         $this->message = $message;
     }
 
     public function broadcastOn()
     {
-        return new Channel('chat.' . $this->message->receiver_id);
-    }
-
-    public function broadcastAs()
-    {
-        return 'message.sent';
+        return new Channel('chat.' . $this->user->id);
     }
 }
