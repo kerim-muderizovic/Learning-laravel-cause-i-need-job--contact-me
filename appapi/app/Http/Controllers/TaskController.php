@@ -98,7 +98,7 @@ public function getUserTasks()
     }
     public function getAllTasks()
     {
-        $tasks = Task::with('assignedUsers')->get();
+        $tasks = Task::with('users')->get();
         return response()->json([
             'success' => true,
             'tasks' => $tasks,

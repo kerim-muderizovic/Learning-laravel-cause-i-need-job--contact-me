@@ -66,9 +66,13 @@ class AuthController extends Controller
         'user' => [
             'id' => $user->id,
             'email' => $user->email,
-            'role' => $user->role,  // Assuming `role` is a column in the users table
-            'requires_2fa'=>$user->requires_2fa,
-        ]
+            'role' => $user->role ?? 'User',
+            'requires_2fa' => $user->requires_2fa ?? false,
+            'name' => $user->name ?? null, // Add name field
+            'profilePicture' => $user->url ?? null, // Add profilePicture field
+        'isLoggedIn' => true,
+        ],
+        'isLoggedIn' => true,
     ]);
 }
 

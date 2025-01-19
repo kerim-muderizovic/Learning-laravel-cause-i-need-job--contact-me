@@ -39,6 +39,8 @@ Route::get('/auth/check', function () {
                 'profilePicture' => $user->url ?? null,
                 'role' => $user->role ?? 'User',
                 'requires_2fa'=>$user->requires_2fa,
+                'email'=>$user->email,
+                'id'=>$user->id
             ],
         ]);
     }

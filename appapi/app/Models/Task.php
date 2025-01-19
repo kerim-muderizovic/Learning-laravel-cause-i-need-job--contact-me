@@ -18,12 +18,8 @@ class Task extends Model
     // Define the relationship with users
     public function users()
     {
-        return $this->belongsToMany(User::class, 'task_user');
+        return $this->belongsToMany(User::class, 'task_user', 'task_id', 'user_id');
     }
 
-    public function assignedUsers()
-{
-    return $this->belongsToMany(User::class, 'task_user', 'task_id', 'user_id');
-}
-
+  
 }
