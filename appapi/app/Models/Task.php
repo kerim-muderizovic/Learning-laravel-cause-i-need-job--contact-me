@@ -13,6 +13,8 @@ class Task extends Model
         'progress',
         'due_date',
         'priority',
+        'due_date',
+        'completed'
     ];
 
     // Define the relationship with users

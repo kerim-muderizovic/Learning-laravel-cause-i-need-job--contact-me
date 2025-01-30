@@ -39,6 +39,7 @@ class TaskController extends Controller
             'description' => $validated['description'] ?? null,
             'progress' => $validated['progress'] ?? 0,
             'priority' => $validated['priority'] ?? null,
+            'due_date' => $validated['due_date'] ?? null,
         ]);
 
         // Attach users to the task if provided
@@ -149,25 +150,65 @@ public function getUserTasks()
 }
 
 public function updateProgress(Request $request, $taskId)
-    {
-        // Validate the input (making sure progress is a number between 0 and 100)
-        $validated = $request->validate([
-            'progress' => 'required|integer|between:0,100',
-        ]);
+{
+    // Validate the input (making sure progress is a number between 0 and 100)
+    $validated = $request->validate([
+        'progress' => 'required|integer|between:0,100',
+    ]);
 
-        // Find the task by ID
-        $task = Task::find($taskId);
+    // Find the task by ID
+    $task = Task::find($taskId);
 
-        if (!$task) {
-            return response()->json(['message' => 'Task not found'], 404);
-        }
-
-        // Update the progress field
-        $task->progress = $validated['progress'];
-        $task->save(); // Save the updated task
-
-        return response()->json(['task' => $task], 200);
+    if (!$task) {
+        return response()->json(['message' => 'Task not found'], 404);
     }
+
+    // Update the progress field
+    $task->progress = $validated['progress'];
+
+    // Check if progress is 100 and update the completed status
+    if ($task->progress == 100) {
+        $task->completed = true;
+    } else {
+        $task->completed = false; // Optionally, set to false if progress is less than 100
+    }
+
+    $task->save(); // Save the updated task
+
+    return response()->json(['task' => $task], 200);
+}
+
+public function getTaskProgresses()
+{
+    $user = Auth::user(); // Get the logged-in user
+
+    // Count tasks in progress (not completed, progress > 0 but < 100)
+    $inProgressTasks = Task::whereHas('users', function ($query) use ($user) {
+        $query->where('user_id', $user->id);
+    })->where('progress', '>', 0)
+      ->where('progress', '<', 100)
+      ->where('completed', false)
+      ->count();
+
+    // Count completed tasks (progress == 100 and completed == true)
+    $completedTasks = Task::whereHas('users', function ($query) use ($user) {
+        $query->where('user_id', $user->id);
+    })->where('progress', 100)
+      ->where('completed', true)
+      ->count();
+
+    // Count not started tasks (progress == 0)
+    $notStartedTasks = Task::whereHas('users', function ($query) use ($user) {
+        $query->where('user_id', $user->id);
+    })->where('progress', 0)
+      ->count();
+
+    return response()->json([
+        'in_progress_tasks' => $inProgressTasks,
+        'completed_tasks' => $completedTasks,
+        'not_started_tasks' => $notStartedTasks,
+    ]);
+}
    
 
 }

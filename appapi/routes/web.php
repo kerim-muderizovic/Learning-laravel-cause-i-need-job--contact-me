@@ -94,3 +94,5 @@ Route::post('/messages', [MessageController::class, 'store']);
 Route::get('/api/messages', [MessageController::class, 'index']);
     Route::post('api/messages', [MessageController::class, 'store']);
     Route::post('/broadcasting1/auth', [BroadcastController::class, 'authenticate']);
+
+    Route::get('/task-progresses',[TaskController::class,'getTaskProgresses']);

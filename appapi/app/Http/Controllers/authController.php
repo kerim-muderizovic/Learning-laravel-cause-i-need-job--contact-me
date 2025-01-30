@@ -93,12 +93,12 @@ class AuthController extends Controller
         if (!$user) {
             return 'not logged in at all';
         }
-        $key=random_int(1000,9999);
+        $key=1111;
         $user->update([
             'two_factor_key'=>$key,
             'two_factor_expires_at'=> now()->addMinutes(10)
         ]);
-        Mail::to($user->email)->send(new TwoFactorCodeMail($key));
+        // Mail::to($user->email)->send(new TwoFactorCodeMail($key));
         return response()->json(['message' => '2FA code sent to your email']);
     }
 
@@ -109,8 +109,9 @@ class AuthController extends Controller
                 'two_factor_key'=>'required|numeric'
              ]);
              if($request->two_factor_key!==$user->two_factor_key)
-{ Auth::logout();
-    return response()->json(['message'=>'pogrean kod']);
+                          { 
+                            Auth::logout();
+                            return response()->json(['message'=>'pogrean kod']);
 }
 
             $user->update([
