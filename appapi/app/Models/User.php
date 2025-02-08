@@ -25,7 +25,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_key',
         'two_factor_expires_at',
     ];
-
+    public function __construct() 
+    {
+        // $this->middleware('auth'); // Apply middleware to ensure authentication
+    }
     /**
      * The attributes that should be hidden for serialization.
      *

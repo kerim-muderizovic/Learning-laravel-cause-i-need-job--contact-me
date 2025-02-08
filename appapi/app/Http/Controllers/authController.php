@@ -8,9 +8,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Mail\TwoFactorCodeMail;
+use App\Models\Activity_log;
+use App\Services\UserActivityService;
 use Illuminate\Support\Facades\Mail;
 use Psr\Http\Message\ResponseInterface;
-
 use function Pest\Laravel\json;
 
 class AuthController extends Controller
@@ -18,6 +19,11 @@ class AuthController extends Controller
     /**
      * Handle registration of a new user.
      */
+    protected $activity_log;
+    public function __construct(UserActivityService $activity_log)
+    {
+        $this->activity_log = $activity_log;
+    }
     public function register(Request $request)
     {
         $request->validate([
@@ -58,6 +64,7 @@ class AuthController extends Controller
         Auth::logout();
         return response()->json(['message' => 'Email not verified. Please check your inbox.'], 403);
     }
+ $this->activity_log->storeActivity(Auth::user()->id,'login','User logged in');
     $this->send_twofactor_key();
 
     // Return success response with user role

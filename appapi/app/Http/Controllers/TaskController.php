@@ -5,14 +5,15 @@ use App\Models\User;
 
 use Illuminate\Http\Request;
 use App\Models\Task;
+use App\Services\UserActivityService;
 use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    // Applying the auth middleware to the controller or just the store method
-    public function __construct()
+    protected $userActivityService;
+    public function __construct(UserActivityService $userActivityService)
     {
-        // $this->middleware('auth')->only('store'); // This ensures only authenticated users can store tasks
+        $this->userActivityService = $userActivityService;
     }
 
     public function store(Request $request)
@@ -41,6 +42,7 @@ class TaskController extends Controller
             'priority' => $validated['priority'] ?? null,
             'due_date' => $validated['due_date'] ?? null,
         ]);
+        $this->userActivityService->storeActivity(Auth::id(), 'created_task', request()->ip());
 
         // Attach users to the task if provided
         if (!empty($validated['users'])) {
@@ -103,6 +105,7 @@ public function getUserTasks()
         return response()->json([
             'success' => true,
             'tasks' => $tasks,
+            
         ]);
     }
         
@@ -126,6 +129,7 @@ public function getUserTasks()
         // }
 
         // Delete the task
+        $this->userActivityService->storeActivity($user->id, 'deleted_task', request()->ip());
         $task->delete();
 
         return response()->json([
@@ -172,7 +176,7 @@ public function updateProgress(Request $request, $taskId)
     } else {
         $task->completed = false; // Optionally, set to false if progress is less than 100
     }
-
+    $this->userActivityService->storeActivity(Auth::id(), 'updated_task_progress', request()->ip());
     $task->save(); // Save the updated task
 
     return response()->json(['task' => $task], 200);

@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use App\Models\TaskUser;
-
+use Illuminate\Support\Facades\Auth;
 class AdminController extends Controller
 {
     // Ensure only admin can access these routes
@@ -123,4 +123,6 @@ class AdminController extends Controller
             'task' => $task
         ], 201);
     }
+
+ 
 }

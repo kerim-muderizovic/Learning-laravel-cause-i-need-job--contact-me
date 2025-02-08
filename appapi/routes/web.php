@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogs;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Broadcast;
 use App\Http\Middleware\ExcludeCsrfMiddleware;
 // Public Routes
 use App\Http\Controllers\BroadcastController;
+use App\Http\Controllers\ChatController;
+
 Route::get('/', function () {
     return ['Laravel' => app()->version()];
 });
@@ -81,9 +84,6 @@ Route::put('/tasks/{taskId}', [TaskController::class, 'updateProgress']);
 // });
 
 
-Route::get('/messages', [MessageController::class, 'index']);
-Route::post('/messages', [MessageController::class, 'store']);
-
 // Route::post('/broadcasting/auth', function () {
 //     // Custom logic (e.g., authentication of the user) can be added here
 //     // Laravel will handle the broadcasting auth automatically, but you can add additional checks if needed.
@@ -91,8 +91,19 @@ Route::post('/messages', [MessageController::class, 'store']);
 //     return response()->json(['message' => 'Authenticated successfully']);
 // });
 
-Route::get('/api/messages', [MessageController::class, 'index']);
-    Route::post('api/messages', [MessageController::class, 'store']);
+
     Route::post('/broadcasting1/auth', [BroadcastController::class, 'authenticate']);
 
     Route::get('/task-progresses',[TaskController::class,'getTaskProgresses']);
+
+    Route::get('/Admin/GetAllActivities',[ActivityLogs::class,'GetAllActivityLogs']);
+
+    Route::post('/send-message', [ChatController::class, 'sendMessage']);
+Route::get('/messages/{userId}/{adminId}', [ChatController::class, 'getMessages']);
+
+    // Route::middleware('auth')->get('/auth/debug', function () {
+    //     return response()->json([
+    //         'is_logged_in' => Auth::check(),
+    //         'user' => Auth::user(),
+    //     ]);
+    // });
