@@ -24,7 +24,7 @@ class AuthController extends Controller
     {
         $this->activity_log = $activity_log;
     }
-    public function register(Request $request)
+    public function register(Request $request) 
     {
         $request->validate([
             'name' => 'required|string|max:255',

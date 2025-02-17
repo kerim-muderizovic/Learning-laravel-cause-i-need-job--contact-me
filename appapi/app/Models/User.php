@@ -8,6 +8,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Task;
+use App\Models\admin;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -44,6 +47,10 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @return array<string, string>
      */
+    public function admin()
+    {
+        $this->hasOne(Admin::class,'id','id');
+    }
     protected function casts(): array
     {
         return [
