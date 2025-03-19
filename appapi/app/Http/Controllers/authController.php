@@ -45,44 +45,55 @@ class AuthController extends Controller
 
     /**
      * Handle login of an existing user.
-     */public function login(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required|string',
-    ]);
+     */
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
 
-    // Attempt to authenticate the user
-    if (!Auth::attempt($request->only('email', 'password'))) {
-        return response()->json(['message' => 'Invalid login credentials.'], 401);
+        // Find the user by email
+        $user = User::where('email', $request->email)->first();
+        
+        // Check if user exists and password is correct
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalid login credentials.'], 401);
+        }
+
+        // Check the user's email_verified_at
+        if (is_null($user->email_verified_at)) {
+            return response()->json(['message' => 'Email not verified. Please check your inbox.'], 403);
+        }
+        
+        // Generate and store 2FA code but don't fully authenticate yet
+        // Store user ID in session to remember who is attempting to log in
+        $request->session()->put('auth_user_id', $user->id);
+        $request->session()->put('auth_requires_2fa', true);
+        
+        // Log the login attempt
+        $this->activity_log->storeActivity($user->id, 'login_attempt', 'User attempting login, awaiting 2FA');
+        
+        // Generate and send 2FA code
+        $key = 1111; // In production, use a random number generator
+        $user->update([
+            'two_factor_key' => $key,
+            'two_factor_expires_at' => now()->addMinutes(10)
+        ]);
+        
+        // Mail::to($user->email)->send(new TwoFactorCodeMail($key));
+
+        // Return response indicating 2FA is required
+        return response()->json([
+            'message' => 'Please enter 2FA code sent to your email',
+            'requires_2fa' => true,
+            'user' => [
+                'email' => $user->email,
+                'requires_2fa' => true,
+            ],
+            'isLoggedIn' => false,
+        ]);
     }
-
-    // Check the authenticated user's email_verified_at
-    $user = Auth::user(); // Get the currently authenticated user
-
-    if (is_null($user->email_verified_at)) {
-        Auth::logout();
-        return response()->json(['message' => 'Email not verified. Please check your inbox.'], 403);
-    }
- $this->activity_log->storeActivity(Auth::user()->id,'login','User logged in');
-    $this->send_twofactor_key();
-
-    // Return success response with user role
-    return response()->json([
-        'message' => 'Login successful!',
-        'user' => [
-            'id' => $user->id,
-            'email' => $user->email,
-            'role' => $user->role ?? 'User',
-            'requires_2fa' => $user->requires_2fa ?? false,
-            'name' => $user->name ?? null, // Add name field
-            'profilePicture' => $user->url ?? null, // Add profilePicture field
-        'isLoggedIn' => true,
-        ],
-        'isLoggedIn' => true,
-    ]);
-}
-
 
     /**
      * Handle logout.
@@ -111,23 +122,57 @@ class AuthController extends Controller
 
     public function verify_twofactor(Request $request)
     {
-        $user=auth::user();
-             $request->validate([
-                'two_factor_key'=>'required|numeric'
-             ]);
-             if($request->two_factor_key!==$user->two_factor_key)
-                          { 
-                            Auth::logout();
-                            return response()->json(['message'=>'pogrean kod']);
-}
-
-            $user->update([
-                'two_factor_key'=>null,
-                'two_factor_expires_at'=>null
-            ]);
-            return response()->json(['message'=>'Yes','user'=>$user]);
-          
-
+        $request->validate([
+            'two_factor_key' => 'required|numeric'
+        ]);
+        
+        // Get the user ID from session
+        $userId = $request->session()->get('auth_user_id');
+        
+        if (!$userId) {
+            return response()->json(['message' => 'Authentication session expired. Please log in again.'], 401);
+        }
+        
+        $user = User::find($userId);
+        
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        
+        // Verify the 2FA code
+        if ($request->two_factor_key !== $user->two_factor_key) {
+            return response()->json(['message' => 'Incorrect verification code'], 401);
+        }
+        
+        // Check if code is expired
+        if ($user->two_factor_expires_at < now()) {
+            return response()->json(['message' => 'Verification code expired. Please request a new one.'], 401);
+        }
+        
+        // Clear 2FA data
+        $user->update([
+            'two_factor_key' => null,
+            'two_factor_expires_at' => null
+        ]);
+        
+        // Now fully authenticate the user
+        Auth::login($user);
+        $request->session()->forget(['auth_user_id', 'auth_requires_2fa']);
+        
+        // Log successful login
+        $this->activity_log->storeActivity($user->id, 'login', 'User completed 2FA and logged in');
+        
+        return response()->json([
+            'message' => 'Authentication successful',
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'role' => $user->role ?? 'User',
+                'name' => $user->name ?? null,
+                'profilePicture' => $user->url ?? null,
+                'isLoggedIn' => true,
+            ],
+            'isLoggedIn' => true,
+        ]);
     }
-
 }

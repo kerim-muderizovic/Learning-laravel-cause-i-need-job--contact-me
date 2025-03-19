@@ -23,7 +23,13 @@ Route::get('/', function () {
 // Authentication Routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/loginn', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
+
+// Broadcasting Authentication - IMPORTANT: must be outside middleware
+Route::post('/broadcasting-auth', [BroadcastController::class, 'authenticate']);
+
+// Make admins endpoint available outside middleware for chat functionality
+Route::get('/admins', [ChatController::class, 'getAdmins']);
 
 // Email Verification
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
@@ -53,7 +59,7 @@ Route::get('/auth/check', function () {
 });
 
 // Authenticated Routes
-
+Route::middleware(['auth'])->group(function () {
     // User Routes
     Route::prefix('user')->group(function () {
         Route::put('{id}/update-image', [UserController::class, 'updatePhoto']);
@@ -64,25 +70,44 @@ Route::get('/auth/check', function () {
     });
 
     // Task Routes
-        Route::get('/getAllTasks', [TaskController::class, 'getAllTasks']); // Fetch all tasks
-        Route::get('/getUserTasks', [TaskController::class, 'getUserTasks']); // Fetch all tasks
-        Route::post('/postTask', [TaskController::class, 'store']); // Create a task
-        Route::get('/assignable-users', [TaskController::class, 'getAssignableUsers']); // Fetch assignable users
-        Route::delete('DeleteTask/{taskId}', [TaskController::class, 'destroy']); // Delete a task
-// Fallback for Unauthenticated Access
-Route::get('/login', function () {
-    return response()->json(['message' => 'You must be logged in to access this route.'], 401);
-})->name('login');
-Route::put('/tasks/{taskId}', [TaskController::class, 'updateProgress']);
+    Route::get('/getAllTasks', [TaskController::class, 'getAllTasks']); // Fetch all tasks
+    Route::get('/getUserTasks', [TaskController::class, 'getUserTasks']); // Fetch all tasks
+    Route::post('/postTask', [TaskController::class, 'store']); // Create a task
+    Route::get('/assignable-users', [TaskController::class, 'getAssignableUsers']); // Fetch assignable users
+    Route::delete('DeleteTask/{taskId}', [TaskController::class, 'destroy']); // Delete a task
+    Route::put('/tasks/{taskId}', [TaskController::class, 'updateProgress']);
 
-// Route::middleware([IsAdmin::class])->group(function () {
+    // Chat Routes
+    Route::post('/send-message', [ChatController::class, 'sendMessage']);
+    Route::get('/messages/{userId}/{adminId}', [ChatController::class, 'getMessages']);
+
+    Route::get('/task-progresses',[TaskController::class,'getTaskProgresses']);
+
+    Route::get('/Admin/GetAllActivities',[ActivityLogs::class,'GetAllActivityLogs']);
+});
+
+// Admin Routes
+Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('Admin/users/{id}', [AdminController::class, 'deleteUser']);
     Route::delete('Admin/tasks/{id}', [AdminController::class, 'deleteTask']);
     Route::put('Admin/tasks/{id}', [AdminController::class, 'editTask']);
     Route::put('Admin/users/{id}', [AdminController::class, 'editUser']);
     Route::post('/Admin/AddTask', [AdminController::class, 'createTask']);
-// });
+    Route::get('/Admin/GetAllActivities',[ActivityLogs::class,'GetAllActivityLogs']);
+});
 
+// Fallback for Unauthenticated Access
+Route::get('/login', function () {
+    return response()->json(['message' => 'You must be logged in to access this route.'], 401);
+})->name('login');
+
+// Route::middleware([IsAdmin::class])->group(function () {
+//     Route::delete('Admin/users/{id}', [AdminController::class, 'deleteUser']);
+//     Route::delete('Admin/tasks/{id}', [AdminController::class, 'deleteTask']);
+//     Route::put('Admin/tasks/{id}', [AdminController::class, 'editTask']);
+//     Route::put('Admin/users/{id}', [AdminController::class, 'editUser']);
+//     Route::post('/Admin/AddTask', [AdminController::class, 'createTask']);
+// });
 
 // Route::post('/broadcasting/auth', function () {
 //     // Custom logic (e.g., authentication of the user) can be added here
@@ -91,19 +116,9 @@ Route::put('/tasks/{taskId}', [TaskController::class, 'updateProgress']);
 //     return response()->json(['message' => 'Authenticated successfully']);
 // });
 
-
-    Route::post('/broadcasting1/auth', [BroadcastController::class, 'authenticate']);
-
-    Route::get('/task-progresses',[TaskController::class,'getTaskProgresses']);
-
-    Route::get('/Admin/GetAllActivities',[ActivityLogs::class,'GetAllActivityLogs']);
-
-    Route::post('/send-message', [ChatController::class, 'sendMessage']);
-Route::get('/messages/{userId}/{adminId}', [ChatController::class, 'getMessages']);
-
-    // Route::middleware('auth')->get('/auth/debug', function () {
-    //     return response()->json([
-    //         'is_logged_in' => Auth::check(),
-    //         'user' => Auth::user(),
-    //     ]);
-    // });
+// Route::middleware('auth')->get('/auth/debug', function () {
+//     return response()->json([
+//         'is_logged_in' => Auth::check(),
+//         'user' => Auth::user(),
+//     ]);
+// });
