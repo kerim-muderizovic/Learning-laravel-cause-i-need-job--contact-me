@@ -11,13 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->string('description')->nullable()->change();;
-            $table->integer('progress')->default(0)->nullable()->change();;
-            $table->boolean('completed')->default(false)->nullable()->change();;
-            $table->enum('priority', ['low', 'medium', 'high'])->default('medium')->nullable()->change();
-        });
+        if (Schema::hasTable('tasks')) {
+            Schema::table('tasks', function (Blueprint $table) {
+                // Make sure we're only modifying columns that exist
+                if (Schema::hasColumn('tasks', 'description')) {
+                    $table->string('description')->nullable()->change();
+                }
+                
+                if (Schema::hasColumn('tasks', 'progress')) {
+                    $table->string('progress')->nullable()->change(); // Changed to string as in later migration
+                }
+                
+                if (Schema::hasColumn('tasks', 'completed')) {
+                    $table->boolean('completed')->default(false)->nullable()->change();
+                }
+                
+                if (Schema::hasColumn('tasks', 'priority')) {
+                    $table->string('priority')->nullable()->change(); // Changed to string from enum
+                }
+            });
+        }
     }
 
     /**
@@ -25,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        // No reversal as we're just making fields nullable
     }
 };

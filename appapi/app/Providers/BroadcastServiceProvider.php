@@ -12,8 +12,7 @@ class BroadcastServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Commenting out default broadcasting routes to use our custom one
-        // Broadcast::routes(['middleware' => ['web']]);
+        Broadcast::routes(['middleware' => ['web', 'auth:sanctum']]);
         
         require base_path('routes/channels.php');
     }

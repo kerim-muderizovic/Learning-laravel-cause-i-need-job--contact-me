@@ -90,5 +90,26 @@ class UserController extends Controller
         return response()->json($users, 200);
     }
 
-
+    /**
+     * Get user information for a specific user
+     */
+    public function getUserInfo($id)
+    {
+        try {
+            $user = User::find($id);
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            
+            return response()->json([
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'profile_image' => $user->url ?? null,
+                'is_online' => true // You can implement online status tracking later
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error retrieving user information: ' . $e->getMessage()], 500);
+        }
+    }
 }

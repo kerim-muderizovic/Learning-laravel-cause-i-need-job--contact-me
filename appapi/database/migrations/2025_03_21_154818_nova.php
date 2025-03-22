@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('admins')) {
-            Schema::create('admins', function(Blueprint $table) {
-                $table->unsignedBigInteger('id')->primary();
-                $table->foreign('id')->references('id')->on('users')->onDelete('cascade');
-                $table->timestamps();
+        // Update url field in users table if exists
+        if (Schema::hasColumn('users', 'url')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->text('url')->nullable()->change(); // Ensure url is nullable text
             });
         }
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('admins');
+        // No need to revert as this is just ensuring the url field is of text type
     }
 };

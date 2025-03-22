@@ -120,7 +120,7 @@ class ChatController extends Controller
             }
 
             // Check if the authenticated user is an admin
-            if ($admin->role !== 'Admin') {
+            if (strtolower($admin->role) !== 'admin') {
                 return response()->json(['error' => 'Only admins can view chat users'], 403);
             }
 

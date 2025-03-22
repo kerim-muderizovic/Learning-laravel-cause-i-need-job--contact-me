@@ -90,6 +90,7 @@ class AuthController extends Controller
             'user' => [
                 'email' => $user->email,
                 'requires_2fa' => true,
+                'role' => $user->role,
             ],
             'isLoggedIn' => false,
         ]);

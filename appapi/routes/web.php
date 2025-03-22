@@ -12,6 +12,7 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Middleware\ExcludeCsrfMiddleware;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 // Public Routes
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\ChatController;
@@ -26,7 +27,8 @@ Route::post('/loginn', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 
 // Broadcasting Authentication - IMPORTANT: must be outside middleware
-Route::post('/broadcasting-auth', [BroadcastController::class, 'authenticate']);
+Route::post('/broadcasting/auth', [BroadcastController::class, 'authenticate'])->withoutMiddleware(VerifyCsrfToken::class);
+Route::post('/broadcasting-auth', [BroadcastController::class, 'authenticate'])->withoutMiddleware(VerifyCsrfToken::class); // Alias for compatibility
 
 // Make admins endpoint available outside middleware for chat functionality
 Route::get('/admins', [ChatController::class, 'getAdmins']);
@@ -67,6 +69,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('{userId}/tasks', [TaskController::class, 'getUserTasks']);
         Route::post('/update-password', [UserController::class, 'updatePassword']);
         Route::get('/getAll', [UserController::class, 'getAllUsers']);
+        Route::get('/{id}', [UserController::class, 'getUserInfo']);
     });
 
     // Task Routes
@@ -80,6 +83,9 @@ Route::middleware(['auth'])->group(function () {
     // Chat Routes
     Route::post('/send-message', [ChatController::class, 'sendMessage']);
     Route::get('/messages/{userId}/{adminId}', [ChatController::class, 'getMessages']);
+    Route::get('/chat/users', [ChatController::class, 'getUsersWithChats']);
+    Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
+    Route::post('/messages/mark-read/{senderId}', [ChatController::class, 'markMessagesAsRead']);
 
     Route::get('/task-progresses',[TaskController::class,'getTaskProgresses']);
 
