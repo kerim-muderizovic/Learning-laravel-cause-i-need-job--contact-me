@@ -95,27 +95,27 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Admin Routes
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::delete('Admin/users/{id}', [AdminController::class, 'deleteUser']);
-    Route::delete('Admin/tasks/{id}', [AdminController::class, 'deleteTask']);
-    Route::put('Admin/tasks/{id}', [AdminController::class, 'editTask']);
-    Route::put('Admin/users/{id}', [AdminController::class, 'editUser']);
-    Route::post('/Admin/AddTask', [AdminController::class, 'createTask']);
-    Route::get('/Admin/GetAllActivities',[ActivityLogs::class,'GetAllActivityLogs']);
-});
-
-// Fallback for Unauthenticated Access
-Route::get('/login', function () {
-    return response()->json(['message' => 'You must be logged in to access this route.'], 401);
-})->name('login');
-Route::get('/Admin/Get5ActivityLogs',[ActivityLogs::class,'get5ActivityLogs']);
-// Route::middleware([IsAdmin::class])->group(function () {
+// Route::middleware(['auth', 'admin'])->group(function () {
 //     Route::delete('Admin/users/{id}', [AdminController::class, 'deleteUser']);
 //     Route::delete('Admin/tasks/{id}', [AdminController::class, 'deleteTask']);
 //     Route::put('Admin/tasks/{id}', [AdminController::class, 'editTask']);
 //     Route::put('Admin/users/{id}', [AdminController::class, 'editUser']);
 //     Route::post('/Admin/AddTask', [AdminController::class, 'createTask']);
 // });
+
+// Fallback for Unauthenticated Access
+Route::get('/login', function () {
+    return response()->json(['message' => 'You must be logged in to access this route.'], 401);
+})->name('login');
+Route::get('/Admin/Get5ActivityLogs',[ActivityLogs::class,'get5ActivityLogs']);
+Route::middleware([IsAdmin::class])->group(function () {
+    Route::delete('Admin/users/{id}', [AdminController::class, 'deleteUser']);
+        Route::get('/Admin/GetAllActivities',[ActivityLogs::class,'GetAllActivityLogs']);
+    Route::delete('Admin/tasks/{id}', [AdminController::class, 'deleteTask']);
+    Route::put('Admin/tasks/{id}', [AdminController::class, 'editTask']);
+    Route::put('Admin/users/{id}', [AdminController::class, 'editUser']);
+    Route::post('/Admin/AddTask', [AdminController::class, 'createTask']);
+});
 
 // Route::post('/broadcasting/auth', function () {
 //     // Custom logic (e.g., authentication of the user) can be added here
