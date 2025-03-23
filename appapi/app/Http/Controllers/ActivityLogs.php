@@ -22,7 +22,13 @@ class ActivityLogs extends Controller
             'activityLogs' => $activityLogs
         ]);
     }
-    
+    public function get5ActivityLogs()
+    {
+        $activityLogs = Activity_log::with('user')->orderBy('created_at', 'desc')->limit(5)->get();
+        return response()->json([
+            'activityLogs' => $activityLogs
+        ]);
+    }
     
     
 }

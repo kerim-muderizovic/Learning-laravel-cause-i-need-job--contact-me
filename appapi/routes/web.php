@@ -30,6 +30,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 Route::post('/broadcasting/auth', [BroadcastController::class, 'authenticate'])->withoutMiddleware(VerifyCsrfToken::class);
 Route::post('/broadcasting-auth', [BroadcastController::class, 'authenticate'])->withoutMiddleware(VerifyCsrfToken::class); // Alias for compatibility
 
+// Make critical chat routes available for debugging - TEMPORARY FIX for 500 errors
+Route::post('/send-message', [ChatController::class, 'sendMessage'])->withoutMiddleware(VerifyCsrfToken::class);
+
 // Make admins endpoint available outside middleware for chat functionality
 Route::get('/admins', [ChatController::class, 'getAdmins']);
 
@@ -81,7 +84,6 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/tasks/{taskId}', [TaskController::class, 'updateProgress']);
 
     // Chat Routes
-    Route::post('/send-message', [ChatController::class, 'sendMessage']);
     Route::get('/messages/{userId}/{adminId}', [ChatController::class, 'getMessages']);
     Route::get('/chat/users', [ChatController::class, 'getUsersWithChats']);
     Route::get('/chat/unread-count', [ChatController::class, 'getUnreadCount']);
@@ -106,7 +108,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 Route::get('/login', function () {
     return response()->json(['message' => 'You must be logged in to access this route.'], 401);
 })->name('login');
-
+Route::get('/Admin/Get5ActivityLogs',[ActivityLogs::class,'get5ActivityLogs']);
 // Route::middleware([IsAdmin::class])->group(function () {
 //     Route::delete('Admin/users/{id}', [AdminController::class, 'deleteUser']);
 //     Route::delete('Admin/tasks/{id}', [AdminController::class, 'deleteTask']);

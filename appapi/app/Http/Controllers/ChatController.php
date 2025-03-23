@@ -16,6 +16,13 @@ class ChatController extends Controller
     public function sendMessage(Request $request)
     {
         try {
+            Log::info('Send message request received', [
+                'request_data' => $request->all(),
+                'auth_check' => Auth::check(),
+                'auth_id' => Auth::id(),
+                'headers' => $request->headers->all()
+            ]);
+            
             $request->validate([
                 'receiver_id' => 'required|exists:users,id',
                 'message' => 'required|string',
@@ -24,6 +31,7 @@ class ChatController extends Controller
             // Get the authenticated user ID as sender
             $senderId = Auth::id();
             if (!$senderId) {
+                Log::warning('User not authenticated when sending message');
                 return response()->json(['error' => 'User not authenticated'], 401);
             }
 
@@ -35,7 +43,9 @@ class ChatController extends Controller
                 'is_read' => false, // Mark as unread initially
             ]);
 
-            // Broadcast the message event
+            Log::info('Message created successfully', ['message_id' => $message->id]);
+
+            // Broadcast the message event with message content as a string for backward compatibility
             event(new MessageSent($message->message, $senderId, $request->receiver_id));
 
             return response()->json([
@@ -43,7 +53,13 @@ class ChatController extends Controller
                 'message' => $message
             ]);
         } catch (\Exception $e) {
-            Log::error('Error sending message: ' . $e->getMessage());
+            Log::error('Error sending message', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+                'auth_check' => Auth::check()
+            ]);
+            
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error sending message: ' . $e->getMessage()
@@ -162,7 +178,7 @@ class ChatController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'profile_image' => $user->profile_image,
+                    'profile_image' => $user->url,
                     'unread_count' => $unreadCount,
                     'last_message' => $lastMessage ? [
                         'message' => $lastMessage->message,
@@ -221,7 +237,7 @@ class ChatController extends Controller
             }
 
             // Get all users with Admin role
-            $admins = User::where('role', 'Admin')->get(['id', 'name', 'email', 'profile_image']);
+            $admins = User::where('role', 'admin')->get(['id', 'name', 'email', 'url']);
 
             return response()->json([
                 'admins' => $admins

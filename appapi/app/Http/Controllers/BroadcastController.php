@@ -6,27 +6,30 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class BroadcastController extends Controller
 {
     public function authenticate(Request $request)
     {
-        // Log detailed information about the request
+        // Log the broadcasting authentication attempt
         Log::info('Broadcasting auth attempt', [
             'user' => Auth::check() ? Auth::id() : 'Not authenticated',
             'socketId' => $request->socket_id,
-            'channelName' => $request->channel_name,
-            'headers' => $request->headers->all(),
-            'session' => $request->session()->all()
+            'channelName' => $request->channel_name
         ]);
         
-        // If no authenticated user, try to find the user in session
+        // If no authenticated user, try to authenticate from session
         if (!Auth::check() && $request->session()->has('auth_user_id')) {
             $userId = $request->session()->get('auth_user_id');
-            Log::info('Found user in session', ['userId' => $userId]);
+            Log::info('Found user in session, logging in', ['userId' => $userId]);
             
-            // You could attempt to authenticate the user here if needed
-            // Auth::loginUsingId($userId);
+            // Attempt to log in the user from session
+            $user = User::find($userId);
+            if ($user) {
+                Auth::login($user);
+                Log::info('User logged in for broadcast auth', ['userId' => $userId]);
+            }
         }
         
         // Return the authentication response
