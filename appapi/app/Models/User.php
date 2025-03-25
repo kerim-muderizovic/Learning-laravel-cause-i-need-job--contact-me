@@ -28,6 +28,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'profile_image',
         'two_factor_key',
         'two_factor_expires_at',
+        'role',
+        'url',
     ];
     public function __construct() 
     {

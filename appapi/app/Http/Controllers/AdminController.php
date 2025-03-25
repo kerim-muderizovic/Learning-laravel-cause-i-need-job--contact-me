@@ -7,7 +7,9 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use App\Models\TaskUser;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Admin;
+
 class AdminController extends Controller
 {
     // Ensure only admin can access these routes
@@ -60,6 +62,8 @@ class AdminController extends Controller
             'title' => 'required|string',
             'description' => 'nullable|string',
             'progress' => 'nullable|integer|min:0|max:100',
+            'priority' => 'nullable|string|in:low,medium,high',
+            'due_date' => 'nullable|date',
             // Add more fields as needed
         ]);
 
@@ -78,17 +82,42 @@ class AdminController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
+        // Log the incoming request data
+        Log::info('Edit user request data', [
+            'request_data' => $request->all(),
+            'user_id' => $id,
+            'current_role' => $user->role
+        ]);
+
         // Validate the input
         $validated = $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $id,
+            'role' => 'required|string|in:admin,user,manager',
             // Add more fields as needed (e.g., password, role)
+        ]);
+
+        // Log the validated data
+        Log::info('Validated user data', [
+            'validated_data' => $validated,
+            'role' => $validated['role']
         ]);
 
         // Update the user
         $user->update($validated);
 
-        return response()->json(['message' => 'User updated successfully', 'user' => $user]);
+        // Verify the update was successful
+        $updatedUser = User::find($id);
+        Log::info('User after update', [
+            'user' => $updatedUser,
+            'updated_role' => $updatedUser->role
+        ]);
+
+        return response()->json([
+            'message' => 'User updated successfully', 
+            'user' => $updatedUser,
+            'updated_role' => $updatedUser->role
+        ]);
     }
 
     public function createTask(Request $request)
