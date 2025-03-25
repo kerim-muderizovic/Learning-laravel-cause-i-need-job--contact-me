@@ -13,7 +13,7 @@ use App\Services\UserActivityService;
 use Illuminate\Support\Facades\Mail;
 use Psr\Http\Message\ResponseInterface;
 use function Pest\Laravel\json;
-
+use App\Models\Admin;
 class AuthController extends Controller
 {
     /**
@@ -26,10 +26,28 @@ class AuthController extends Controller
     }
     public function register(Request $request) 
     {
+        // Get admin settings from request
+        $adminSettings = Admin::first();
+        
+        // Get settings
+        $allow_creating_accounts = $adminSettings->allow_creating_accounts;
+        $require_strong_password = $adminSettings->require_strong_password;
+        // Check if registration is allowed
+        if ($allow_creating_accounts === null || !$allow_creating_accounts) {
+           return response()->json(['message' => 'Registration is currently disabled by administrator'], 403);
+        }
+        
+        // Check if strong password is required
+        $passwordRule = 'required|string|min:8|confirmed';
+        if ($require_strong_password) {
+            // Add strong password requirements
+            $passwordRule .= '|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/';
+        }
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => $passwordRule,
         ]);
 
         $user = User::create([
@@ -39,6 +57,9 @@ class AuthController extends Controller
         ]);
         $user->sendEmailVerificationNotification();
         Auth::login($user);
+
+        // Log account creation in user activities
+        $this->activity_log->storeActivity($user->id, 'account_created', 'New user account created');
 
         return response()->json(['message' => 'Registration successful'], 201);
     }

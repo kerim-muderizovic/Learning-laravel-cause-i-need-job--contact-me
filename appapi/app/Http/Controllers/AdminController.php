@@ -7,6 +7,7 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use App\Models\TaskUser;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Admin;
 class AdminController extends Controller
 {
     // Ensure only admin can access these routes
@@ -123,6 +124,46 @@ class AdminController extends Controller
             'task' => $task
         ], 201);
     }
+      public function settings()
+      {
+        // Get the first admin record from the database (global settings)
+        $admin = Admin::first();
+        
+        if (!$admin) {
+            return response()->json(['error' => 'Admin settings not found'], 404);
+        }
+        
+        return response()->json([
+            'requireStrongPassword' => $admin->require_strong_password,
+            'allow_creating_accounts' => $admin->allow_creating_accounts,
+            'user_deletion_days' => $admin->user_deletion_days,
+            'enable_audit_logs' => $admin->enable_audit_logs,
+            'enable_reset_password' => $admin->enable_reset_password,
+        ]);
+    }
 
+    public function applySettings(Request $request)
+    {
+        // Validate the incoming request
+        $validatedData = $request->validate([
+            'require_strong_password' => 'boolean',
+            'allow_creating_accounts' => 'boolean',
+            'user_deletion_days' => 'integer|min:0',
+            'enable_audit_logs' => 'boolean',
+            'enable_reset_password' => 'boolean',
+        ]);
+
+        // Find the admin record (assuming only one admin settings record exists)
+        $admin = Admin::first(); // Using first() instead of find(1)
+
+        if (!$admin) {
+            return response()->json(['error' => 'Admin settings not found'], 404);
+        }
+
+        // Update the settings
+        $admin->update($validatedData);
+
+        return response()->json(['message' => 'Settings updated successfully', 'data' => $admin]);
+    }
  
 }

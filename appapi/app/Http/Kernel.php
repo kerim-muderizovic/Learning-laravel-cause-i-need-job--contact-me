@@ -15,6 +15,7 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
+        \App\Http\Middleware\EnforceAdminSettings::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
@@ -64,5 +65,6 @@ class Kernel extends HttpKernel
         'exclude.csrf' => \App\Http\Middleware\ExcludeCsrfMiddleware::class,
         'admin' => \App\Http\Middleware\IsAdmin::class,
         '2fa' => \App\Http\Middleware\Ensure2FACompleted::class,
+        'admin.settings' => \App\Http\Middleware\EnforceAdminSettings::class,
     ];
 } 

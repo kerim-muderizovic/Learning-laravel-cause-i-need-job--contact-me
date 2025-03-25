@@ -16,6 +16,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 // Public Routes
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\PasswordResetController;
 
 Route::get('/', function () {
     return ['Laravel' => app()->version()];
@@ -115,7 +116,13 @@ Route::middleware([IsAdmin::class])->group(function () {
     Route::put('Admin/tasks/{id}', [AdminController::class, 'editTask']);
     Route::put('Admin/users/{id}', [AdminController::class, 'editUser']);
     Route::post('/Admin/AddTask', [AdminController::class, 'createTask']);
+    Route::get('/Admin/settings', [AdminController::class, 'settings']);
+    Route::post('/Admin/ApplySettings', [AdminController::class, 'applySettings']);
 });
+
+// Password Reset Routes
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 
 // Route::post('/broadcasting/auth', function () {
 //     // Custom logic (e.g., authentication of the user) can be added here

@@ -50,8 +50,19 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function admin()
     {
-        $this->hasOne(Admin::class,'id','id');
+        return $this->hasOne(Admin::class, 'id', 'id');
     }
+
+    /**
+     * Check if the user is an admin.
+     *
+     * @return bool
+     */
+    public function isAdmin()
+    {
+        return strtolower($this->role) === 'admin';
+    }
+
     protected function casts(): array
     {
         return [
@@ -61,8 +72,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     public function tasks()
-{
-    return $this->belongsToMany(Task::class, 'task_user');
-}
-
+    {
+        return $this->belongsToMany(Task::class, 'task_user');
+    }
 }
